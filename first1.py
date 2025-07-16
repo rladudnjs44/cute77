@@ -9,16 +9,19 @@ df = pd.read_csv(FILE_PATH, encoding="euc-kr")
 
 # ✅ 쉼표 제거 후 숫자로 변환
 df = df.apply(lambda x: x.str.replace(",", "") if x.dtype == "object" else x)
-df.iloc[:, 1:] = df.iloc[:, 1:].apply(pd.to_numeric, errors="coerce")
+df = df.apply(pd.to_numeric, errors="ignore")  # 변환 가능한 건 숫자로 변환
 
-# ✅ 주요 컬럼 식별
+# ✅ 총인구수 컬럼을 숫자로 변환 (핵심 수정)
 total_pop_col = "2025년05월_계_총인구수"
+df[total_pop_col] = pd.to_numeric(df[total_pop_col], errors="coerce")
+
+# ✅ 연령 관련 컬럼만 추출
 age_cols = [
     col for col in df.columns
     if col.startswith("2025년05월_계_") and "총인구수" not in col and "연령구간" not in col
 ]
 
-# ✅ 연령 컬럼명 정리 (중복 방지)
+# ✅ 연령 컬럼명 전처리 (중복 방지)
 def clean_age_col(col):
     age = col.split("_")[-1]
     if "이상" in age:
@@ -47,9 +50,9 @@ st.subheader("연령별 인구 추이")
 age_only_cols = [new_age_cols[c] for c in age_cols]
 age_numeric = [a for a in age_only_cols if a.isdigit()]
 age_special = [a for a in age_only_cols if not a.isdigit()]
-age_sorted = sorted(age_numeric, key=int) + age_special  # 숫자 오름차순 + 이상
+age_sorted = sorted(age_numeric, key=int) + age_special
 
-# ✅ 행정구역별 그래프 표시
+# ✅ 행정구역별 그래프
 for _, row in df_top5.iterrows():
     st.write(f"### {row['행정구역']}")
     chart_data = row[age_sorted].rename("인구").to_frame()
