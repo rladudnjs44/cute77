@@ -34,3 +34,4 @@ top5_chart = top5.set_index("행정구역")[age_only_cols].T  # 연령을 세로
 
 st.line_chart(top5_chart)
 
+
